@@ -1,4 +1,4 @@
-# Pharmaceutical Sales Analysis Project
+# Pharmaceutical Data Pipeline & Sales Analysis Project
 
 This project is a complete data pipeline and analysis solution for a pharmaceutical sales system. It covers **XML data ingestion**, **relational schema creation**, **data partitioning**, **ETL to a star schema**, and **visual analysis** in R using ggplot2.
 
