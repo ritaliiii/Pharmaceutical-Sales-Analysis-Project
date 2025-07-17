@@ -1,0 +1,129 @@
+---
+title: "Sales Analysis"
+author: "Ning Li"
+date: "Summer 2024"
+output:
+  html_document:
+    df_print: paged
+subtitle: "2020-2023"
+---
+
+
+```{r connectionSetup, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(DBI)
+library(RMySQL)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(kableExtra)
+
+# credentials
+db_name_fh <- "sql12723156"
+db_user_fh <- "sql12723156"
+db_host_fh <- "sql12.freemysqlhosting.net"
+db_pwd_fh <- "aNHWI8BQML"
+db_port_fh <- 3306
+
+# connection setup
+mydb <-  dbConnect(RMySQL::MySQL(), user = db_user_fh, password = db_pwd_fh,dbname = 
+                     db_name_fh, host = db_host_fh, port = db_port_fh)
+```
+
+## Top Five Products by Revenue Across All Years
+
+```{r AnalyticalQueryI, echo=FALSE, message=FALSE, warning=FALSE}
+# get the result data frame
+top_five_products_with_most_sales <- dbGetQuery(mydb, "
+  SELECT productName, SUM(total_amount_sold) AS total_revenue
+  FROM sales_facts
+  GROUP BY productName
+  ORDER BY total_revenue DESC
+  LIMIT 5
+")
+
+# plot a horizontal bar chart to display the result
+ggplot(top_five_products_with_most_sales, aes(x = reorder(productName, total_revenue), y = total_revenue)) +
+  # make the heights of the bars show the values in the data, fill with color orange
+  geom_bar(stat = "identity", fill = "orange") +
+  # flip the cords to make the chart horizontal
+  coord_flip() +
+  # add titles and labels
+  labs(title = "Top Five Products by Revenue", x = "Product Name", y = "Total Revenue") +
+  theme_minimal() +
+  # format the y axis labels to include commas and set the limit of y-axis to make the chart fit
+  scale_y_continuous(labels = scales::comma, limits = c(0, max(top_five_products_with_most_sales$total_revenue) * 1.2)) +
+  geom_text(aes(label = scales::comma(total_revenue)), hjust = -0.2, size = 3)
+
+```
+
+## Sale Performance of Every Product Per Quarter
+
+```{r AnalyticalQueryII, echo=FALSE, message=FALSE, warning=FALSE}
+revenue_units_per_product_per_quarter <- dbGetQuery(mydb, "
+  SELECT productName, year, quarter, SUM(total_amount_sold) AS total_revenue, SUM(total_units_sold) AS total_units
+  FROM sales_facts
+  GROUP BY  productName, year, quarter
+  ORDER BY year, quarter ASC, total_revenue DESC, productName
+")
+
+# display the result in a stacked bar chart 
+ggplot(revenue_units_per_product_per_quarter, aes(x = interaction(year, quarter), y = total_revenue, fill = productName)) +
+   # make the heights of the bars show the values in the data
+  geom_bar(stat = "identity") +
+  # add titles and labels
+  labs(title = "Sale Performance of Every Product Per Quarter", x = "Year-Quarter", y = "Total Revenue", fill = "Product Name") +
+  theme_minimal() +
+  # rotates x axis labels 45 degrees to look better
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  # format the y axis labels to include commas
+  scale_y_continuous(labels = scales::comma)
+
+
+```
+
+## Total Revenue of Every Product by Country
+
+```{r AnalyticalQueryIII, echo=FALSE, message=FALSE, warning=FALSE}
+total_revenue_of_product_by_country <- dbGetQuery(mydb, "
+  SELECT productName, country, SUM(total_amount_sold) AS total_revenue
+  FROM sales_facts
+  GROUP BY productName, country
+  ORDER BY productName, country
+")
+
+# Plot the result
+ggplot(total_revenue_of_product_by_country, aes(x = productName, y = total_revenue, group = country, color = country)) +
+  # add lines
+  geom_line() +
+  # add points
+  geom_point() +
+  # add titles and labels
+  labs(title = "Total Revenue of Every Product by Country", x = "Product Name", y = "Total Revenue") +
+  theme_minimal() +
+  # rotates x axis labels 45 degrees to look better
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  # format the y axis labels to include commas
+  scale_y_continuous(labels = scales::comma)
+
+
+```
+
+## Sales Rep Performance by Quarter
+
+```{r AnalyticalQueryIV, echo=FALSE, message=FALSE, warning=FALSE}
+avg_sales_rep_by_quarter <- dbGetQuery(mydb, "
+  SELECT repName, year, quarter, SUM(total_amount_sold)/COUNT(*) AS average_sales
+  FROM rep_facts 
+  GROUP BY repName, year, quarter
+  ORDER BY year, quarter ASC, average_sales DESC, repName
+")
+
+# display the result
+result <- kable(avg_sales_rep_by_quarter, caption = "Sales Rep Performance by Quarter")
+result <- kable_styling(result, bootstrap_options = c("striped", "hover", "condensed"), 
+                        full_width = TRUE, 
+                        font_size = 12)
+result
+```
+
+
