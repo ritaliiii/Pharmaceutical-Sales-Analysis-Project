@@ -66,3 +66,10 @@ This script:
 ### Step 3: Generate Analytical Report
 
 Open `Sales_Analysis_Report.Rmd` in RStudio and click **Knit** to HTML.
+
+## Analysis Visualization
+<img width="488" height="730" alt="Screenshot 2025-07-17 at 09 17 33" src="https://github.com/user-attachments/assets/dcd66603-5e77-40f3-9248-4c3567cfd6a5" />
+
+<img width="774" height="756" alt="Screenshot 2025-07-17 at 09 17 47" src="https://github.com/user-attachments/assets/843939e2-9b52-4d4c-8e74-76aeb9218a96" />
+
+
